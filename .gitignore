@@ -1,0 +1,6 @@
+jails.json
+
+.build/
+bin/
+
+modules/
