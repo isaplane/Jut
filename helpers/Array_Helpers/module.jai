@@ -5,6 +5,11 @@ map :: (array: [] $T, f: (T) -> $S) -> [..] S
     return results;
 }
 
+arrays_are_equal :: (a: [] $T, b: [] T) -> bool
+{
+    return arrays_are_equal(a, b, (a, b) => a == b);
+}
+
 arrays_are_equal :: (a: [] $T, b: [] T, comparator: (T, T) -> bool) -> bool
 {
     if a.count != b.count return false;

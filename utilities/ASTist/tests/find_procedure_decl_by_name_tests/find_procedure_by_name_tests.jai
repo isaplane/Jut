@@ -28,14 +28,14 @@ find_procedures_by_name_teardown :: ()
 
 Find_Procedures_By_Name_Test_Case :: struct
 {
-    proc_target: string;
+    target_proc: string;
     found_procs_count: int;
 }
 
 find_procedures_by_name_test_cases: [] Find_Procedures_By_Name_Test_Case = .[
-    .{"layout", 1},
-    .{"test", 0},
-    .{"Layout", 0}
+    .{"find_procedure_decl_by_name_layout", 1},
+    .{"find_procedure_decl_by_name_fail", 0},
+    .{"find_procedure_decl_by_name_Layout", 0}
 ];
 
 find_procedures_by_name_test :: (c: Find_Procedures_By_Name_Test_Case)
@@ -43,7 +43,6 @@ find_procedures_by_name_test :: (c: Find_Procedures_By_Name_Test_Case)
     using setup := context.setup_data.(*Find_Procedures_By_Name_Setup_Data);
 
     compiler_begin_intercept(workspace);
-
     add_build_file(target_file, workspace);
 
     all_procs: [..] *Code_Procedure_Body;
@@ -55,7 +54,7 @@ find_procedures_by_name_test :: (c: Find_Procedures_By_Name_Test_Case)
             case .TYPECHECKED;
             {
                 tc := cast(*Message_Typechecked) message;
-                procs := ASTist.find_procedure_by_name_from_message(tc, c.proc_target);
+                procs := ASTist.find_procedure_decl_by_name_from_message(tc, c.target_proc);
                 array_add(*all_procs, ..procs);
             }                
 
@@ -68,7 +67,7 @@ find_procedures_by_name_test :: (c: Find_Procedures_By_Name_Test_Case)
                 {
                     Verifai.are_equal(c.found_procs_count, all_procs.count);
                     if all_procs.count > 0 
-                        Verifai.are_equal(c.proc_target, all_procs[0].header.name);
+                        Verifai.are_equal(c.target_proc, all_procs[0].header.name);
                 }
             }
 
