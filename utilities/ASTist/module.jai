@@ -149,7 +149,7 @@ get_lvalues_from_assignment :: (assignment: *Code_Binary_Operator) -> [..] *Code
     return lvalues;
 }
 
-insert_string_as_argument :: (call: *Code_Procedure_Call, args: ..string) -> *Code_Procedure_Call
+insert_strings_as_arguments :: (call: *Code_Procedure_Call, args: ..string) -> *Code_Procedure_Call
 {
     new_args: [..] Code_Argument;
     array_add(*new_args, ..call.arguments_unsorted);
@@ -160,13 +160,32 @@ insert_string_as_argument :: (call: *Code_Procedure_Call, args: ..string) -> *Co
         array_add(*new_args, .{expression = lit});
     }
 
-    new_call := New(Code_Procedure_Call);
-    new_call.base = call.base;
-    new_call.base.kind = .PROCEDURE_CALL;
-    new_call.procedure_expression = call.procedure_expression;
-    new_call.arguments_unsorted = new_args;
+    return replace_args_and_create_new_call(call, new_args);
+}
 
-    return new_call;
+insert_string_array_literal_as_argument :: (call: *Code_Procedure_Call, args: ..string) -> *Code_Procedure_Call
+{
+    new_args: [..] Code_Argument;
+    array_add(*new_args, ..call.arguments_unsorted);
+
+    array_info   := New(Code_Array_Literal_Info);
+    array_members: [..] *Code_Node;
+    for arg: args
+    {
+        lit := make_string_literal(arg);
+        array_add(*array_members, lit);
+    }
+
+    array_info.array_members = array_members;
+
+    array_lit := New(Code_Literal);
+    array_lit.kind = .LITERAL;
+    array_lit.value_type = .ARRAY;
+    array_lit.array_literal_info = array_info;
+
+    array_add(*new_args, .{expression = array_lit});
+
+    return replace_args_and_create_new_call(call, new_args);
 }
 
 proc_has_been_modified :: (body: *Code_Procedure_Body) -> bool
@@ -188,6 +207,17 @@ find_procedure_decl_by_name :: (bodies: [] *Code_Procedure_Body, proc_name: stri
     }
 
     return matching;
+}
+
+replace_args_and_create_new_call :: (old_call: *Code_Procedure_Call, new_args: [] Code_Argument) -> *Code_Procedure_Call
+{
+    new_call := New(Code_Procedure_Call);
+    new_call.base = old_call.base;
+    new_call.base.kind = .PROCEDURE_CALL;
+    new_call.procedure_expression = old_call.procedure_expression;
+    new_call.arguments_unsorted = new_args;
+
+    return new_call;
 }
 
 #import "Compiler";

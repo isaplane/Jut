@@ -1,30 +1,31 @@
-Insert_String_As_Argument_Setup_Data :: struct
+
+Insert_String_Array_Literal_As_Argument_Setup_Data :: struct
 {
     target_file: string;
     write_file: string;
     workspace: Workspace;
 }
 
-insert_string_as_argument_setup :: ()
+insert_string_array_literal_as_argument_setup :: ()
 {
-    using setup := New(Insert_String_As_Argument_Setup_Data);
+    using setup := New(Insert_String_Array_Literal_As_Argument_Setup_Data);
 
-    set_working_directory("tests/insert_string_as_argument_tests/");
+    set_working_directory("tests/insert_string_array_literal_as_argument_tests/");
     workspace = compiler_create_workspace("target");
     options := get_build_options(workspace);
     options.output_type = .NO_OUTPUT;
     set_build_options(options, workspace);
 
-    write_file = "write_file.jai";
+    write_file = "string_array_write_file.jai";
 
     if file_exists(write_file) file_delete(write_file);
 
     context.setup_data = setup;
 } @Setup
 
-insert_string_as_argument_teardown :: ()
+insert_string_array_literal_as_argument_teardown :: ()
 {
-    using setup := context.setup_data.(*Insert_String_As_Argument_Setup_Data);
+    using setup := context.setup_data.(*Insert_String_Array_Literal_As_Argument_Setup_Data);
     defer free(setup);
 
     if file_exists(write_file) file_delete(write_file);
@@ -32,7 +33,7 @@ insert_string_as_argument_teardown :: ()
 
 // -----------------------------------------------------------------------------
 
-Insert_String_As_Argument_Test_Case :: struct
+Insert_String_Array_Literal_As_Argument_Test_Case :: struct
 {
     parent_proc: string;
     target_proc: string;
@@ -40,13 +41,14 @@ Insert_String_As_Argument_Test_Case :: struct
     expected_file_string: string;
 }
 
-insert_string_as_argument_tests: [] Insert_String_As_Argument_Test_Case = .[
-    .{parent_proc = "write_file_1",   target_proc = "write_string_1", call_type = .SIMPLE_DECLARATION, expected_file_string = "Found lvalue foo!\n"},
+insert_string_array_literal_as_argument_tests: [] Insert_String_Array_Literal_As_Argument_Test_Case = .[
+    .{parent_proc = "string_array_write_file_1",   target_proc = "string_array_write_string_1", call_type = .SIMPLE_DECLARATION, expected_file_string = "Found lvalues [\"foo\"]!\n"},
+    .{parent_proc = "string_array_write_file_2",   target_proc = "string_array_write_string_2", call_type = .COMPOUND_DECLARATION, expected_file_string = "Found lvalues [\"foo\", \"bar\"]!\n"},
 ];
 
-insert_string_as_argument_test :: (c: Insert_String_As_Argument_Test_Case)
+insert_string_array_literal_as_argument_test :: (c: Insert_String_Array_Literal_As_Argument_Test_Case)
 {
-    using setup := context.setup_data.(*Insert_String_As_Argument_Setup_Data);
+    using setup := context.setup_data.(*Insert_String_Array_Literal_As_Argument_Setup_Data);
 
     compiler_begin_intercept(workspace);
 
@@ -80,8 +82,21 @@ insert_string_as_argument_test :: (c: Insert_String_As_Argument_Test_Case)
                         decl := results.simple_declarations[0];
                         call := decl.expression.(*Code_Procedure_Call);
 
-                        ident := ASTist.get_lvalue_from_simple_declaration(results.simple_declarations[0]);
-                        new_call := ASTist.insert_strings_as_arguments(call, ident.name);
+                        ident := ASTist.get_lvalue_from_simple_declaration(decl);
+                        new_call := ASTist.insert_string_array_literal_as_argument(call, ident.name);
+
+                        call.* = new_call;
+                    }
+
+                    case .COMPOUND_DECLARATION;
+                    {
+                        assert(results.compound_declarations.count == 1);
+
+                        decl := results.compound_declarations[0];
+                        call := decl.declaration_properties.expression.(*Code_Procedure_Call);
+
+                        idents := ASTist.get_lvalues_from_compound_declaration(decl);
+                        new_call := ASTist.insert_string_array_literal_as_argument(call, ..Array_Helpers.map(idents, x => x.name));
 
                         call.* = new_call;
                     }
@@ -109,6 +124,7 @@ insert_string_as_argument_test :: (c: Insert_String_As_Argument_Test_Case)
 #scope_file
 ASTist  :: #import "ASTist";
 Verifai :: #import "Verifai";
+Array_Helpers :: #import "Array_Helpers";
 #import "Compiler";
 #import "File_Utilities";
 #import "Basic";
