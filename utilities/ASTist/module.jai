@@ -193,6 +193,24 @@ proc_has_been_modified :: (body: *Code_Procedure_Body) -> bool
     return xx (body.body_flags & .ALREADY_MODIFIED);
 }
 
+check_struct_for_note :: (s: *Code_Struct, target_note: string, found_structs: *[..] *Code_Struct) -> bool
+{
+    note_strings := Array_Helpers.map(s.notes, n => n.text);
+    found_note := Array_Helpers.contains(note_strings, target_note);
+
+    if found_note array_add(found_structs, s);
+    return found_note;
+}
+
+check_decl_for_note :: (d: *Code_Declaration, target_note: string, found_decls: *[..] *Code_Declaration) -> bool
+{
+    note_strings := Array_Helpers.map(d.notes, n => n.text);
+    found_note := Array_Helpers.contains(note_strings, target_note);
+
+    if found_note array_add(found_decls, d);
+    return found_note;
+}
+
 #scope_file
 
 // Returns an array, since we search by name and the proc may have overloads
