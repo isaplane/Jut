@@ -1,8 +1,16 @@
-map :: (array: [] $T, f: (T) -> $S) -> [..] S 
+map :: (a: [] $T, f: (T) -> $S) -> [..] S 
 {
     results: [..] S;
-    for array array_add(*results, f(it));
+    for a array_add(*results, f(it));
     return results;
+}
+
+reverse_in_place :: (a: *[] $T)
+{
+    if a.count <= 1 return;
+
+    for i: 0..a.count/2 - 1
+        a.data[i], a.data[a.count - 1 - i] = a.data[a.count - 1 - i], a.data[i];
 }
 
 arrays_are_equal :: (a: [] $T, b: [] T) -> bool

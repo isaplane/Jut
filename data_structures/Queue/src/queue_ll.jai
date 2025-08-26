@@ -13,9 +13,11 @@ enqueue :: (using queue: *$Q/Queue, item: Q.T)
 
 dequeue :: (using queue: *$Q/Queue) -> (ok: bool, item: Q.T)
 {
-    if !head return false, .{};
+    item: Q.T;
+    if !head return false, item;
+
     deq_node := head;
-    item := deq_node.item;
+    item = deq_node.item;
 
     head = deq_node.next;
     if !head tail = null;
@@ -28,7 +30,9 @@ dequeue :: (using queue: *$Q/Queue) -> (ok: bool, item: Q.T)
 
 peek :: (using queue: *$Q/Queue) -> (ok: bool, item: Q.T)
 {
-    if !head return false, .{};
+    item: Q.T;
+    if !head return false, item;
+
     return true, head.item;
 }
 
