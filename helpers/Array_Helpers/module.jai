@@ -35,5 +35,15 @@ contains :: (a: [] $T, t: T, comparator: (T, T) -> bool) -> bool
     return false;
 }
 
+ordered_remove_by_index_and_return :: (array_pointer: *[] $T, index: s64) -> T
+{
+    assert(index >= 0);
+    assert(index < array_pointer.count);
+
+    result := array_pointer.*[index];
+    array_ordered_remove_by_index(array_pointer, index);
+    return result;
+}
+
 #scope_file
 #import "Basic";
